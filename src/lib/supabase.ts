@@ -1,10 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("🔴 Supabase Environment Variables Missing Hain! Apni .env.local file check karein.");
+  throw new Error("Missing Supabase environment variables inside .env.local!");
 }
 
-export const supabase = createClient(supabaseUrl || 'https://placeholder-url.supabase.co', supabaseAnonKey || 'placeholder-key');
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

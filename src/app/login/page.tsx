@@ -1,252 +1,78 @@
 "use client";
+
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/src/lib/supabase";
-import { KeyRound, Mail, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, Lock, Mail, Award } from "lucide-react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) return;
+    
     setLoading(true);
-    setMessage(null);
+    setErrorMsg("");
 
-    try {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("is_approved")
-        .eq("email", email.trim().toLowerCase())
-        .single();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
 
-      if (profileError || !profile) {
-        setMessage({
-          type: "error",
-          text: "Aapka email registered nahi hai. Pehle WhatsApp par contact karke register karwayein.",
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (!profile.is_approved) {
-        setMessage({
-          type: "error",
-          text: "Aapka account abhi tak Admin se approved nahi hua. Kindly wait karein ya WhatsApp support par batayein.",
-        });
-        setLoading(false);
-        return;
-      }
-
-      const { error: authError } = await supabase.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-
-      if (authError) {
-        setMessage({ type: "error", text: authError.message });
-      } else {
-        setMessage({
-          type: "success",
-          text: "Login link aapke email par bhej diya gaya hai! Apna Inbox check karein.",
-        });
-      }
-    } catch (err) {
-      setMessage({ type: "error", text: "Kuch masla hua hai, dobara koshish karein." });
-    } finally {
+    if (error) {
+      setErrorMsg(error.message);
       setLoading(false);
+    } else {
+      // Identity router check karne ke liye root node par bhejain
+      router.push("/");
     }
   };
 
   return (
-    <main style={{
-      minHeight: "100vh",
-      backgroundColor: "#030303",
-      color: "#a1a1aa",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "24px",
-      fontFamily: "sans-serif"
-    }}>
-      <div style={{
-        width: "100%",
-        maxWidth: "400px",
-        backgroundColor: "rgba(255, 255, 255, 0.01)",
-        border: "1px solid rgba(255, 255, 255, 0.08)",
-        borderRadius: "16px",
-        padding: "32px",
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-        textAlign: "center",
-        position: "relative"
-      }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "#070707", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "sans-serif", padding: "20px", boxSizing: "border-box" }}>
+      <div style={{ maxWidth: "400px", width: "100%", backgroundColor: "#111827", padding: "32px", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
         
-        {/* LOGO / HEADER */}
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{
-            width: "48px",
-            height: "48px",
-            backgroundColor: "rgba(59, 130, 246, 0.1)",
-            border: "1px solid rgba(59, 130, 246, 0.2)",
-            borderRadius: "12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#60a5fa",
-            margin: "0 auto 16px auto"
-          }}>
-            <KeyRound size={22} />
+        <div style={{ textAlign: "center", marginBottom: "32px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontWeight: 900, fontSize: "18px", color: "#2563eb", marginBottom: "10px" }}>
+            <Award size={24}/> HRD INSTITUTE
           </div>
-          <h1 style={{
-            fontSize: "24px",
-            fontWeight: "900",
-            color: "#ffffff",
-            margin: "0 0 4px 0",
-            letterSpacing: "-0.5px",
-            textTransform: "uppercase"
-          }}>
-            LMS Secure Portal
-          </h1>
-          <p style={{
-            fontSize: "10px",
-            color: "#52525b",
-            letterSpacing: "2px",
-            textTransform: "uppercase",
-            margin: 0,
-            fontWeight: "bold"
-          }}>
-            HRD Institute Ecosystem
-          </p>
+          <p style={{ color: "#71717a", fontSize: "13px", margin: 0 }}>Enter your credentials to sync secure connection.</p>
         </div>
 
-        {/* NOTIFICATION MESSAGES */}
-        {message && (
-          <div style={{
-            display: "flex",
-            alignItems: "start",
-            gap: "12px",
-            padding: "16px",
-            borderRadius: "12px",
-            border: message.type === "success" ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid rgba(239, 68, 68, 0.2)",
-            backgroundColor: message.type === "success" ? "rgba(16, 185, 129, 0.02)" : "rgba(239, 68, 68, 0.02)",
-            color: message.type === "success" ? "#34d399" : "#f87171",
-            fontSize: "12px",
-            textAlign: "left",
-            lineHeight: "1.5",
-            marginBottom: "20px"
-          }}>
-            {message.type === "success" ? (
-              <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
-            ) : (
-              <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
-            )}
-            <p style={{ margin: 0 }}>{message.text}</p>
+        {errorMsg && (
+          <div style={{ backgroundColor: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.2)", color: "#f43f5e", padding: "12px", borderRadius: "10px", fontSize: "13px", marginBottom: "20px" }}>
+            {errorMsg}
           </div>
         )}
 
-        {/* LOGIN FORM */}
-        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <div style={{ textAlign: "left" }}>
-            <label style={{
-              fontSize: "10px",
-              fontWeight: "bold",
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-              color: "#52525b",
-              display: "block",
-              marginBottom: "6px"
-            }}>
-              Registered Email Address
-            </label>
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", color: "#a1a1aa", marginBottom: "6px", textTransform: "uppercase", fontWeight: "bold" }}>Email Address</label>
             <div style={{ position: "relative" }}>
-              <span style={{
-                position: "absolute",
-                left: "14px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "#3f3f46",
-                display: "flex",
-                alignItems: "center"
-              }}>
-                <Mail size={16} />
-              </span>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                style={{
-                  width: "100%",
-                  backgroundColor: "rgba(255, 255, 255, 0.02)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  borderRadius: "12px",
-                  padding: "14px 14px 14px 42px",
-                  fontSize: "14px",
-                  color: "#ffffff",
-                  outline: "none",
-                  boxSizing: "border-box",
-                  transition: "all 0.2s"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "#3b82f6";
-                  e.target.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                  e.target.style.backgroundColor = "rgba(255, 255, 255, 0.02)";
-                }}
-              />
+              <Mail size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#4b5563" }} />
+              <input type="email" placeholder="name@domain.com" value={email} onChange={(e) => setEmail(e.target.value)} required style={{ width: "100%", padding: "12px 12px 12px 40px", backgroundColor: "#070707", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "white", boxSizing: "border-box" }} />
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "14px",
-              borderRadius: "12px",
-              backgroundColor: "#ffffff",
-              color: "#0a0a0a",
-              fontWeight: "bold",
-              fontSize: "12px",
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              transition: "background-color 0.2s",
-              opacity: loading ? 0.5 : 1
-            }}
-          >
-            {loading ? (
-              <>
-                Verifying Credentials <Loader2 size={14} className="animate-spin" />
-              </>
-            ) : (
-              "Request Access Key"
-            )}
+          <div>
+            <label style={{ display: "block", fontSize: "12px", color: "#a1a1aa", marginBottom: "6px", textTransform: "uppercase", fontWeight: "bold" }}>Password</label>
+            <div style={{ position: "relative" }}>
+              <Lock size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#4b5563" }} />
+              <input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: "100%", padding: "12px 12px 12px 40px", backgroundColor: "#070707", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "white", boxSizing: "border-box" }} />
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} style={{ marginTop: "10px", backgroundColor: "#2563eb", color: "white", padding: "14px", border: "none", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+            {loading ? <Loader2 className="animate-spin" size={18} /> : "Sign In to Portal"}
           </button>
         </form>
 
-        <div style={{ marginTop: "24px" }}>
-          <p style={{
-            fontSize: "9px",
-            color: "#3f3f46",
-            letterSpacing: "1px",
-            textTransform: "uppercase",
-            margin: 0
-          }}>
-            Protected by SSL Tokenization
-          </p>
-        </div>
       </div>
-    </main>
+    </div>
   );
 }

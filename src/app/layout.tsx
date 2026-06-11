@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "./globals.css"; // Confirm karein ye file aapke project me majood ho
+import "./globals.css"; 
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "HRD Institute | LMS Portal",
   description: "Premium Secure Learning Management System",
   icons: {
-    icon: "/favicon.ico", // Agar public folder me icon.png rakhi hai to wo rasta yahan de dein
+    icon: "/favicon.ico", 
   },
 };
 
@@ -18,11 +18,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark scroll-smooth">
+    <html lang="en" className="dark scroll-smooth" style={{ backgroundColor: "#070707", margin: 0, padding: 0 }}>
       <body
-        className={`${inter.variable} antialiased bg-[#030303] text-zinc-300 min-h-screen`}
+        className={`${inter.variable} antialiased`}
+        style={{
+          backgroundColor: "#070707",
+          color: "#z300",
+          minHeight: "100vh",
+          margin: 0,
+          padding: 0,
+          display: "flex",
+          flexDirection: "column",
+          boxSizing: "border-box"
+        }}
       >
-        {children}
+        {/* Main Application Wrapper जो sub-pages को full-width stretch होने से रोकेगा */}
+        <div style={{ 
+          width: "100%", 
+          display: "flex", 
+          flexDirection: "column", 
+          flex: 1,
+          boxSizing: "border-box"
+        }}>
+          {children}
+        </div>
       </body>
     </html>
   );
