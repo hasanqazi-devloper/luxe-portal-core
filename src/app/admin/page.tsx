@@ -33,6 +33,8 @@ interface VideoNode {
   pdf_url?: string | null;
 }
 
+export const dynamic = "force-dynamic";
+
 export default function AdminControlCenter() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -74,9 +76,10 @@ export default function AdminControlCenter() {
     fetchAdminData();
   }, []);
 
-  // 🚀 LIVE APPROVAL SWITCHER: Ek click se student ka status badlein
-  const handleToggleFeeStatus = async (id: string, currentStatus: string) => {
+  // 🚀 LIVE APPROVAL SWITCHER WITH EMAIL AUTO-DISPATCH
+  const handleToggleFeeStatus = async (profile: Profile) => {
     setActionLoading(true);
+    const currentStatus = profile.fee_status;
     const nextStatus = currentStatus === "Paid" ? "Unpaid" : "Paid";
     
     const { error } = await supabase
@@ -85,12 +88,34 @@ export default function AdminControlCenter() {
         fee_status: nextStatus,
         fee_amount: nextStatus === "Paid" ? 15000 : 0 
       })
-      .eq("id", id);
+      .eq("id", profile.id);
 
     if (error) {
       alert(`Approval Error: ${error.message}`);
     } else {
       alert(`Student profile updated to ${nextStatus}!`);
+      
+      // Agar status "Paid" ho gaya hai, toh auto-email send karein credentials ke sath
+      if (nextStatus === "Paid") {
+        try {
+          const emailResponse = await fetch("/api/send-credentials", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: profile.email,
+              fullName: profile.full_name,
+              course: profile.course_slug || "Selected Course Path"
+            }),
+          });
+          
+          if (!emailResponse.ok) {
+            console.error("Email API Response Failed");
+          }
+        } catch (emailErr) {
+          console.error("Error trigger processing email route:", emailErr);
+        }
+      }
+
       await fetchAdminData(); // Interface instant refresh hojayega
     }
     setActionLoading(false);
@@ -174,8 +199,7 @@ export default function AdminControlCenter() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", backgroundColor: "#070707", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
-        <Loader2 className="animate-spin text-blue-500" size={36} />
+<div style={{ minHeight: "100vh", backgroundColor: "#070707", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>        <Loader2 className="animate-spin text-blue-500" size={36} />
       </div>
     );
   }
@@ -262,7 +286,7 @@ export default function AdminControlCenter() {
                       {/* Dynamic Approval Switch Action Switcher */}
                       <button
                         disabled={actionLoading}
-                        onClick={() => handleToggleFeeStatus(p.id, p.fee_status)}
+                        onClick={() => handleToggleFeeStatus(p)}
                         style={{
                           padding: "8px 14px",
                           backgroundColor: p.fee_status === "Paid" ? "rgba(239,68,68,0.1)" : "#10b981",
@@ -281,7 +305,7 @@ export default function AdminControlCenter() {
                         {p.fee_status === "Paid" ? (
                           <>
                             <XCircle size={14} /> Lock Account Status
-                          </>
+                          </                           >
                         ) : (
                           <>
                             <CheckCircle size={14} /> Approve Admission
