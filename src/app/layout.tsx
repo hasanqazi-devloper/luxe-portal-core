@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "HRD Institute | LMS Portal",
   description: "Premium Secure Learning Management System",
   icons: {
-    icon: "/favicon.ico", 
+    icon: "/icon.png", 
   },
 };
 
