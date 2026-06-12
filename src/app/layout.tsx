@@ -18,9 +18,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark scroll-smooth" style={{ backgroundColor: "#070707", margin: 0, padding: 0 }}>
+    /* 🎯 Next.js warning ko fixed karne ke liye data-scroll-behavior lagaya hai */
+    <html 
+      lang="en" 
+      className="dark scroll-smooth" 
+      data-scroll-behavior="smooth" 
+      style={{ backgroundColor: "#070707", margin: 0, padding: 0 }}
+    >
+      {/* 🎯 Extension errors ko ignore karne ke liye suppressHydrationWarning lagaya hai */}
       <body
         className={`${inter.variable} antialiased`}
+        suppressHydrationWarning={true}
         style={{
           backgroundColor: "#070707",
           color: "#z300",

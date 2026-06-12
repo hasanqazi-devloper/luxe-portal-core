@@ -10,8 +10,10 @@ interface Profile {
   father_name?: string;
   email: string;
   phone_number?: string;
-  cnic?: string;
   city?: string;
+  age?: number;      
+  gender?: string;     
+  address?: string;    
   fee_status: string;
   course_slug?: string;
 }
@@ -56,11 +58,14 @@ export default function AdminControlCenter() {
   const fetchAdminData = async () => {
     setLoading(true);
     
-    // Profiles table se student ka poora data fetch kar rahe hain
-    const { data: profs } = await supabase
+    const { data: profs, error: profError } = await supabase
       .from("profiles")
-      .select("id, full_name, father_name, email, phone_number, cnic, city, fee_status, course_slug")
-      .order("created_at", { ascending: false }); // Naye students sabse upar aayenge
+      .select("id, full_name, father_name, email, phone_number, city, age, gender, address, fee_status, course_slug");
+      
+    if (profError) {
+      console.error("Profiles Fetching Error:", profError.message);
+      alert(`Database Fetch Error: ${profError.message}`);
+    }
       
     const { data: crs } = await supabase.from("courses").select("id, title, mentor, duration, lessons").order("id");
     const { data: vids } = await supabase.from("videos").select("id, course_id, name, duration, video_url, pdf_url").order("id", { ascending: false });
@@ -95,28 +100,32 @@ export default function AdminControlCenter() {
     } else {
       alert(`Student profile updated to ${nextStatus}!`);
       
-      // Agar status "Paid" ho gaya hai, toh auto-email send karein credentials ke sath
       if (nextStatus === "Paid") {
+        console.log("✈️ Triggering Custom Email API Route for:", profile.email);
         try {
           const emailResponse = await fetch("/api/send-credentials", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              email: profile.email,
+              email: profile.email.trim(),
               fullName: profile.full_name,
-              course: profile.course_slug || "Selected Course Path"
+              course: profile.course_slug && profile.course_slug.trim() !== "" ? profile.course_slug : "Full Stack Web Development Masterclass"
             }),
           });
           
-          if (!emailResponse.ok) {
-            console.error("Email API Response Failed");
+          const result = await emailResponse.json();
+          if (emailResponse.ok && result.success) {
+            console.log("🎯 Email Dispatch Confirmed from Server!");
+          } else {
+            console.error("❌ Backend Email Dispatch Failed:", result.error || "Unknown Error");
+            alert(`Backend Email Error: ${result.error || "Check Terminal Logs"}`);
           }
         } catch (emailErr) {
           console.error("Error trigger processing email route:", emailErr);
         }
       }
 
-      await fetchAdminData(); // Interface instant refresh hojayega
+      await fetchAdminData(); 
     }
     setActionLoading(false);
   };
@@ -199,7 +208,8 @@ export default function AdminControlCenter() {
 
   if (loading) {
     return (
-<div style={{ minHeight: "100vh", backgroundColor: "#070707", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>        <Loader2 className="animate-spin text-blue-500" size={36} />
+      <div style={{ minHeight: "100vh", backgroundColor: "#070707", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+        <Loader2 className="animate-spin text-blue-500" size={36} />
       </div>
     );
   }
@@ -253,18 +263,18 @@ export default function AdminControlCenter() {
                         <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#a1a1aa" }}>{p.email}</p>
                       </div>
                       
-                      {/* Delete node shortcut */}
                       <button onClick={() => handleDeleteUser(p.id)} disabled={actionLoading} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "4px" }} title="Remove Student">
                         <Trash2 size={16}/>
                       </button>
                     </div>
 
-                    {/* Metadata Specs Matrix */}
+                    {/* Specs Matrix without CNIC */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", backgroundColor: "#0f0f13", padding: "10px", borderRadius: "10px", fontSize: "11px" }}>
                       <div><span style={{ color: "#71717a" }}>Phone:</span> <span style={{ color: "#f4f4f5", fontWeight: "600" }}>{p.phone_number || "N/A"}</span></div>
-                      <div><span style={{ color: "#71717a" }}>CNIC:</span> <span style={{ color: "#f4f4f5", fontWeight: "600" }}>{p.cnic || "N/A"}</span></div>
                       <div><span style={{ color: "#71717a" }}>City:</span> <span style={{ color: "#f4f4f5", fontWeight: "600" }}>{p.city || "N/A"}</span></div>
+                      <div><span style={{ color: "#71717a" }}>Age / Gender:</span> <span style={{ color: "#f4f4f5", fontWeight: "600" }}>{p.age || "N/A"} ({p.gender || "N/A"})</span></div>
                       <div><span style={{ color: "#71717a" }}>Course Path:</span> <span style={{ color: "#eab308", fontWeight: "bold", textTransform: "uppercase" }}>{p.course_slug || "Not Selected"}</span></div>
+                      <div style={{ gridColumn: "1 / -1" }}><span style={{ color: "#71717a" }}>Address:</span> <span style={{ color: "#a1a1aa" }}>{p.address || "N/A"}</span></div>
                     </div>
 
                     {/* Interactive Approval Action Ribbon */}
@@ -283,7 +293,6 @@ export default function AdminControlCenter() {
                         </span>
                       </div>
 
-                      {/* Dynamic Approval Switch Action Switcher */}
                       <button
                         disabled={actionLoading}
                         onClick={() => handleToggleFeeStatus(p)}
@@ -305,7 +314,7 @@ export default function AdminControlCenter() {
                         {p.fee_status === "Paid" ? (
                           <>
                             <XCircle size={14} /> Lock Account Status
-                          </                           >
+                          </>
                         ) : (
                           <>
                             <CheckCircle size={14} /> Approve Admission
@@ -334,7 +343,7 @@ export default function AdminControlCenter() {
             </form>
           </div>
 
-          <div style={{ backgroundColor: "#0f0f13", padding: "24px", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.03)", maxHeight: "400px", overflowY: "auto" }}>
+          <div style={{ backgroundColor: "#0f0f13", padding: "24px", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.03)" , maxHeight: "400px", overflowY: "auto" }}>
             <span style={{ fontSize: "12px", color: "#71717a", fontWeight: "bold", textTransform: "uppercase" }}>Active Pipeline Branches</span>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "16px" }}>
               {courses.map(c => (
@@ -353,10 +362,10 @@ export default function AdminControlCenter() {
             <h2 style={{ fontSize: "15px", fontWeight: 800, margin: "0 0 20px 0", color: "#eab308", display: "flex", alignItems: "center", gap: "8px" }}><Video size={18}/> SYLLABUS & ASSET UPLOAD</h2>
             <form onSubmit={handleAddLecture} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <input type="number" placeholder="Target Course ID (e.g. 1)" value={newLecture.course_id} onChange={e => setNewLecture({...newLecture, course_id: e.target.value})} style={{ padding: "12px", backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", color: "white", fontSize: "12px" }} />
-              <input type="text" placeholder="Lecture Title (e.g. Setting Up WordPress)" value={newLecture.name} onChange={e => setNewLecture({...newLecture, name: e.target.value})} style={{ padding: "12px", backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", color: "white", fontSize: "12px" }} />
+              <input type="text" placeholder="Lecture Title" value={newLecture.name} onChange={e => setNewLecture({...newLecture, name: e.target.value})} style={{ padding: "12px", backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", color: "white", fontSize: "12px" }} />
               <input type="number" placeholder="Duration (Minutes)" value={newLecture.duration} onChange={e => setNewLecture({...newLecture, duration: e.target.value})} style={{ padding: "12px", backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", color: "white", fontSize: "12px" }} />
-              <input type="text" placeholder="Video Link (YouTube Embed or direct URL)" value={newLecture.video_url} onChange={e => setNewLecture({...newLecture, video_url: e.target.value})} style={{ padding: "12px", backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", color: "white", fontSize: "12px" }} />
-              <input type="text" placeholder="Companion Notes Link (PDF, Zip, or Tool URL)" value={newLecture.pdf_url} onChange={e => setNewLecture({...newLecture, pdf_url: e.target.value})} style={{ padding: "12px", backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", color: "white", fontSize: "12px" }} />
+              <input type="text" placeholder="Video Link" value={newLecture.video_url} onChange={e => setNewLecture({...newLecture, video_url: e.target.value})} style={{ padding: "12px", backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", color: "white", fontSize: "12px" }} />
+              <input type="text" placeholder="Companion Notes Link" value={newLecture.pdf_url} onChange={e => setNewLecture({...newLecture, pdf_url: e.target.value})} style={{ padding: "12px", backgroundColor: "#141418", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "10px", color: "white", fontSize: "12px" }} />
               <button type="submit" disabled={actionLoading} style={{ padding: "12px", backgroundColor: "#eab308", color: "#000000", border: "none", borderRadius: "10px", fontWeight: "bold", cursor: "pointer", fontSize: "13px" }}>Push Asset Node</button>
             </form>
           </div>
