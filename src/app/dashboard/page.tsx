@@ -48,13 +48,15 @@ interface SharedAsset {
 }
 
 interface LectureVideo {
-  id: number; // ✨ string ki jagah exact number rakhein kyunki aapka data id: 1, 3, 4 de raha hai
+  id: number;
   name: string;
   duration: string;
   video_url: string | null;
   course_id?: number;
   completed?: boolean;
+  description?: string | null; // 🛠️ Step 1 Fixed: Added Description inside Interface Node
 }
+
 export default function StudentDashboard() {
   const router = useRouter();
 
@@ -218,17 +220,16 @@ export default function StudentDashboard() {
         if (!selectedCourse) setSelectedCourse(activeTarget);
 
         if (activeTarget) {
-          // 3. Sync Classroom Videos (FIXED FOR YOUR SCHEME)
+          // 🛠️ Step 2 Fixed: Added "description" into the Supabase select query string
           const { data: videoData, error: videoError } = await supabase
             .from("videos")
-            .select("id, name, duration, video_url, course_id")
+            .select("id, name, duration, video_url, course_id, description")
             .eq("course_id", activeTarget.course_id)
             .order("id", { ascending: true });
 
           if (videoData && videoData.length > 0) {
             setLectures(videoData as LectureVideo[]);
 
-            // Grouping manually under a custom track because your scheme doesn't have 'module_name'
             const grouped = {
               "Syllabus Lessons & Lectures": videoData as LectureVideo[]
             };
@@ -541,6 +542,25 @@ export default function StudentDashboard() {
                     Next Lecture →
                   </button>
                 </div>
+
+                {/* 🎯 Added: Dynamic Video Description Section */}
+                {activeVideo?.description && (
+                  <div style={{
+                    marginTop: "20px",
+                    padding: "16px",
+                    backgroundColor: "#0f172a",
+                    borderRadius: "14px",
+                    borderLeft: "4px solid #38bdf8",
+                    borderTop: "1px solid rgba(255,255,255,0.02)"
+                  }}>
+                    <h4 style={{ margin: "0 0 6px 0", fontSize: "12px", fontWeight: "800", color: "#38bdf8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Lecture Overview & Syllabus Topics
+                    </h4>
+                    <p style={{ margin: 0, fontSize: "13px", color: "#cbd5e1", lineHeight: "20px", whiteSpace: "pre-wrap" }}>
+                      {activeVideo.description}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* STUDY RESOURCE NOTES ATTACHMENTS */}

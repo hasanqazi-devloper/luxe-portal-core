@@ -5,8 +5,8 @@ import { supabase } from "@/src/lib/supabase";
 import {
   Loader2, Trash2, Video, Layers, Home, Users, Settings, Archive, Mail, GraduationCap, Search, X, ExternalLink
 } from "lucide-react";
-import { useRouter } from "next/navigation"; // 👈 Agar Next.js App Router (app folder) hai
-// ya phir
+import { useRouter } from "next/navigation";
+
 interface Profile {
   id: string;
   full_name: string;
@@ -47,14 +47,15 @@ interface VideoNode {
   course_title?: string;
   assignment_url?: string | null;
   notes_url?: string | null;
+  description?: string | null;
 }
 
 export const dynamic = "force-dynamic";
 
 export default function AdminControlCenter() {
   const [loading, setLoading] = useState(true);
-  // const [actionLoading, setActionLoading] = useState(false);
-const router = useRouter();
+  const router = useRouter();
+
   // Core Live Data Pipelines
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -89,10 +90,11 @@ const router = useRouter();
     video_url: "",
     module_name: "",
     assignment_url: "",
-    notes_url: ""
+    notes_url: "",
+    description: ""
   });
 
-  // ✨ Manual Student state (isay aise hi rehne dein agar yeh pehle se use ho raha hai)
+  // Manual Student state
   const [manualStudent, setManualStudent] = useState({
     id: "",
     name: "",
@@ -101,19 +103,20 @@ const router = useRouter();
     course_slug: ""
   });
 
-  // ⚙️ Final Admin Settings State (Yahan currentPassword, newPassword aur newEmail teenon lazmi hain)
+  // Admin Settings State
   const [adminSettings, setAdminSettings] = useState({
     currentPassword: "",
     newPassword: "",
-    newEmail: "" // 👈 Yeh lazmi add karna tha change email function ke liye
+    newEmail: ""
   });
 
-  // 👥 New Invitation Email State (Naye admin ko invite bhejane ke liye)
+  // New Invitation Email State
   const [inviteEmail, setInviteEmail] = useState("");
 
-  // ⏳ Loading State (Dono forms ke status aur nodes track karne ke liye)
+  // Loading State
   const [actionLoading, setActionLoading] = useState(false);
-  // 🔄 Fetch Live Data Directly From Supabase Database
+
+  // Fetch Live Data From Supabase Database
   const fetchAdminData = async () => {
     setLoading(true);
     try {
@@ -142,7 +145,7 @@ const router = useRouter();
           education: p.education || "Not Provided",
           address: p.address || "—",
           fee_amount: p.fee_amount !== undefined ? p.fee_amount : 0,
-          videos_watched: Math.floor(Math.random() * 5), // Replace with real analytics tracking column if exists
+          videos_watched: Math.floor(Math.random() * 5),
           assignments_done: 0,
           performance_score: "Good Performance",
           submission_url: null,
@@ -175,7 +178,8 @@ const router = useRouter();
           module_name: v.module_name || v.module || "General",
           course_title: v.course_title || v.course || "",
           assignment_url: v.assignment_url || null,
-          notes_url: v.notes_url || null
+          notes_url: v.notes_url || null,
+          description: v.description || ""
         }));
         setLectures(finalizedVideos as VideoNode[]);
       } else {
@@ -193,7 +197,6 @@ const router = useRouter();
     fetchAdminData();
   }, []);
 
-  // 📝 Real-time Loading Submissions Pipeline Node
   const loadStudentSubmissions = async (student: Profile) => {
     setSelectedAssignmentStudent(student);
     try {
@@ -212,7 +215,6 @@ const router = useRouter();
     }
   };
 
-  // 🔐 Handle Real-time Cloud Grade Updating Dispatcher
   const handleUpdateGrade = async (submissionId: number) => {
     setActionLoading(true);
     try {
@@ -384,8 +386,8 @@ const router = useRouter();
     e.preventDefault();
     setActionLoading(true);
     try {
-      const assignmentPayload = (newLecture as any).assignment_url || null;
-      const notesPayload = (newLecture as any).notes_url || null;
+      const assignmentPayload = newLecture.assignment_url || null;
+      const notesPayload = newLecture.notes_url || null;
 
       const { error } = await supabase
         .from("videos")
@@ -397,7 +399,8 @@ const router = useRouter();
             duration: newLecture.duration ? parseInt(newLecture.duration) : null,
             video_url: newLecture.video_url,
             assignment_url: assignmentPayload,
-            notes_url: notesPayload
+            notes_url: notesPayload,
+            description: newLecture.description || null
           }
         ]);
 
@@ -410,11 +413,12 @@ const router = useRouter();
         duration: "",
         video_url: "",
         assignment_url: "",
-        notes_url: ""
+        notes_url: "",
+        description: ""
       });
 
       await fetchAdminData();
-      alert("Video published successfully!");
+      alert("🚀 Video published successfully with full data mapping!");
 
     } catch (err: any) {
       console.error("Upload error:", err.message);
@@ -466,76 +470,76 @@ const router = useRouter();
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#1E2939", color: "#f8fafc", display: "grid", gridTemplateColumns: "260px 1fr", fontFamily: "system-ui, sans-serif" }}>
 
-    {/* 🧭 WP-STYLE PRESET SIDEBAR */}
-<aside style={{ backgroundColor: "#111827", padding: "24px 16px", display: "flex", flexDirection: "column", gap: "20px", borderRight: "1px solid rgba(255,255,255,0.02)", minHeight: "100vh", width: "260px", boxSizing: "border-box" }}>
-  
-  {/* Logo Section */}
-  <div style={{ padding: "0 8px", marginBottom: "8px" }}>
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <GraduationCap className="text-emerald-400" size={22} />
-      <h2 style={{ fontSize: "18px", fontWeight: "900", color: "#fff", margin: 0 }}>HRD LMS PORTAL</h2>
-    </div>
-    <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700" }}>Admin Desk Suite v5.0</span>
-  </div>
+      {/* 🧭 WP-STYLE PRESET SIDEBAR */}
+      <aside style={{ backgroundColor: "#111827", padding: "24px 16px", display: "flex", flexDirection: "column", gap: "20px", borderRight: "1px solid rgba(255,255,255,0.02)", minHeight: "100vh", width: "260px", boxSizing: "border-box" }}>
 
-  {/* Navigation Menus (Removed flex: 1 to stop push down) */}
-  <nav style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-    {sidebarButton("dashboard", "Dashboard", <Home size={16} />)}
-    {sidebarButton("leads", "Website Leads", <Mail size={16} />)}
-    {sidebarButton("courses", "Courses", <Layers size={16} />)}
-    {sidebarButton("videos", "Videos", <Video size={16} />)}
-    {sidebarButton("students", "Manage Students", <Users size={16} />)}
-    {sidebarButton("settings", "Settings", <Settings size={16} />)}
-    {sidebarButton("bin", "Bin", <Archive size={16} />)}
-  </nav>
+        {/* Logo Section */}
+        <div style={{ padding: "0 8px", marginBottom: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <GraduationCap className="text-emerald-400" size={22} />
+            <h2 style={{ fontSize: "18px", fontWeight: "900", color: "#fff", margin: 0 }}>HRD LMS PORTAL</h2>
+          </div>
+          <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700" }}>Admin Desk Suite v5.0</span>
+        </div>
 
-  {/* ✨ PREMIUM DESIGNED LOG OUT BUTTON (Brought Upwards) */}
-  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "16px", marginTop: "12px" }}>
-    <button
-      onClick={async () => {
-        const confirmLogout = window.confirm("Kya aap waqai log out karna chahte hain?");
-        if (!confirmLogout) return;
-        
-        try {
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
-          router.push("/login"); 
-        } catch (err: any) {
-          alert("Logout Error: " + err.message);
-        }
-      }}
-      style={{
-        width: "100%",
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        padding: "12px 14px",
-        backgroundColor: "rgba(244, 63, 94, 0.03)",
-        border: "1px solid rgba(244, 63, 94, 0.1)",
-        borderRadius: "12px",
-        color: "#f43f5e",
-        fontSize: "13px",
-        fontWeight: "700",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        boxSizing: "border-box"
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = "rgba(244, 63, 94, 0.1)";
-        e.currentTarget.style.borderColor = "rgba(244, 63, 94, 0.2)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = "rgba(244, 63, 94, 0.03)";
-        e.currentTarget.style.borderColor = "rgba(244, 63, 94, 0.1)";
-      }}
-    >
-      <span style={{ display: "flex", alignItems: "center", transform: "rotate(180deg)" }}>
-        ⚡
-      </span>
-      Exit Admin Session
-    </button>
-  </div>
-</aside>
+        {/* Navigation Menus (Removed flex: 1 to stop push down) */}
+        <nav style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+          {sidebarButton("dashboard", "Dashboard", <Home size={16} />)}
+          {sidebarButton("leads", "Website Leads", <Mail size={16} />)}
+          {sidebarButton("courses", "Courses", <Layers size={16} />)}
+          {sidebarButton("videos", "Videos", <Video size={16} />)}
+          {sidebarButton("students", "Manage Students", <Users size={16} />)}
+          {sidebarButton("settings", "Settings", <Settings size={16} />)}
+          {sidebarButton("bin", "Bin", <Archive size={16} />)}
+        </nav>
+
+        {/* ✨ PREMIUM DESIGNED LOG OUT BUTTON (Brought Upwards) */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "16px", marginTop: "12px" }}>
+          <button
+            onClick={async () => {
+              const confirmLogout = window.confirm("Kya aap waqai log out karna chahte hain?");
+              if (!confirmLogout) return;
+
+              try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                router.push("/login");
+              } catch (err: any) {
+                alert("Logout Error: " + err.message);
+              }
+            }}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "12px 14px",
+              backgroundColor: "rgba(244, 63, 94, 0.03)",
+              border: "1px solid rgba(244, 63, 94, 0.1)",
+              borderRadius: "12px",
+              color: "#f43f5e",
+              fontSize: "13px",
+              fontWeight: "700",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+              boxSizing: "border-box"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(244, 63, 94, 0.1)";
+              e.currentTarget.style.borderColor = "rgba(244, 63, 94, 0.2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "rgba(244, 63, 94, 0.03)";
+              e.currentTarget.style.borderColor = "rgba(244, 63, 94, 0.1)";
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "center", transform: "rotate(180deg)" }}>
+              ⚡
+            </span>
+            Exit Admin Session
+          </button>
+        </div>
+      </aside>
 
       {/* 🖥️ MAIN ACTIVE HUB SUITE */}
       <div style={{ padding: "40px", boxSizing: "border-box", overflowY: "auto", maxHeight: "100vh" }}>
@@ -750,7 +754,7 @@ const router = useRouter();
         )}
 
         <>
-          {/* ================= SECTION 4: VIDEO SCHEDULER ENGINE (WITH DELETE ACTIONS) ================= */}
+          {/* ================= SECTION 4: VIDEO SCHEDULER ENGINE (WITH DESCRIPTION) ================= */}
           {activeSidebar === "videos" && (
             <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "32px" }}>
 
@@ -758,6 +762,7 @@ const router = useRouter();
               <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px" }}>
                 <h3 style={{ margin: "0 0 16px 0", fontSize: "15px", color: "#fb923c" }}>Upload Daily Class Video</h3>
                 <form onSubmit={handleAddLecture} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+
                   <select
                     required
                     value={newLecture.course_title}
@@ -774,6 +779,15 @@ const router = useRouter();
                   <input type="text" placeholder="Module Name Designation (e.g. Module 2: Tailwind)" value={newLecture.module_name} onChange={e => setNewLecture({ ...newLecture, module_name: e.target.value })} style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }} />
                   <input type="number" placeholder="Duration (Minutes)" value={newLecture.duration} onChange={e => setNewLecture({ ...newLecture, duration: e.target.value })} style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }} />
                   <input type="url" required placeholder="Private Streaming Embed / Link URL Token" value={newLecture.video_url} onChange={e => setNewLecture({ ...newLecture, video_url: e.target.value })} style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px" }} />
+
+                  {/* ✨ NEW: VIDEO DESCRIPTION FIELD */}
+                  <textarea
+                    placeholder="Enter video overview / class topics description..."
+                    value={newLecture.description || ""}
+                    onChange={e => setNewLecture({ ...newLecture, description: e.target.value })}
+                    rows={3}
+                    style={{ padding: "11px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "13px", fontFamily: "inherit", resize: "vertical", outline: "none" }}
+                  />
 
                   {/* ATTACHMENTS LAYER */}
                   <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "12px", marginTop: "4px", display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -801,7 +815,7 @@ const router = useRouter();
               </div>
 
               {/* SYLLABUS FEED WITH CLEAN TRASH DELETE OPTION */}
-              <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px", maxHeight: "600px", overflowY: "auto" }}>
+              <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px", maxHeight: "640px", overflowY: "auto" }}>
                 <h3 style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#94a3b8" }}>Course-wise Syllabus Feed</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   {courses && courses.length > 0 ? (
@@ -815,25 +829,35 @@ const router = useRouter();
                           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                             {courseVideos.length > 0 ? (
                               courseVideos.map(l => (
-                                <div key={l.id} style={{ backgroundColor: "rgba(17,24,39,0.5)", padding: "12px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                  <div style={{ flex: 1 }}>
-                                    <h5 style={{ margin: 0, fontSize: "13px", color: "white" }}>{l.name}</h5>
-                                    <span style={{ fontSize: "11px", color: "#fb923c", display: "block", marginTop: "2px" }}>
-                                      Module: {l.module_name || "General"} • {l.duration || "—"} Mins
-                                    </span>
-                                    <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-                                      {l.assignment_url && <span style={{ fontSize: "10px", backgroundColor: "rgba(168,85,247,0.1)", color: "#c084fc", padding: "2px 6px", borderRadius: "4px" }}>📝 Assignment Attached</span>}
-                                      {l.notes_url && <span style={{ fontSize: "10px", backgroundColor: "rgba(45,212,191,0.1)", color: "#2dd4bf", padding: "2px 6px", borderRadius: "4px" }}>📚 Notes Attached</span>}
+                                <div key={l.id} style={{ backgroundColor: "rgba(17,24,39,0.5)", padding: "12px", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                    <div style={{ flex: 1 }}>
+                                      <h5 style={{ margin: 0, fontSize: "13px", color: "white" }}>{l.name}</h5>
+                                      <span style={{ fontSize: "11px", color: "#fb923c", display: "block", marginTop: "2px" }}>
+                                        Module: {l.module_name || "General"} • {l.duration || "—"} Mins
+                                      </span>
                                     </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteVideo(l.id)}
+                                      style={{ padding: "6px", backgroundColor: "rgba(239,68,68,0.1)", color: "#f87171", border: "none", borderRadius: "4px", cursor: "pointer", marginLeft: "10px" }}
+                                      title="Delete Video Node"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
                                   </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteVideo(l.id)}
-                                    style={{ padding: "6px", backgroundColor: "rgba(239,68,68,0.1)", color: "#f87171", border: "none", borderRadius: "4px", cursor: "pointer", marginLeft: "10px" }}
-                                    title="Delete Video Node"
-                                  >
-                                    <Trash2 size={13} />
-                                  </button>
+
+                                  {/* ✨ DISPLAY DESCRIPTION IF EXISTS */}
+                                  {l.description && (
+                                    <p style={{ margin: "4px 0 0 0", fontSize: "12px", color: "#94a3b8", lineHeight: "16px", backgroundColor: "rgba(0,0,0,0.15)", padding: "8px", borderRadius: "6px", borderLeft: "2px solid #fb923c" }}>
+                                      {l.description}
+                                    </p>
+                                  )}
+
+                                  <div style={{ display: "flex", gap: "8px", marginTop: "2px" }}>
+                                    {l.assignment_url && <span style={{ fontSize: "10px", backgroundColor: "rgba(168,85,247,0.1)", color: "#c084fc", padding: "2px 6px", borderRadius: "4px" }}>📝 Assignment Attached</span>}
+                                    {l.notes_url && <span style={{ fontSize: "10px", backgroundColor: "rgba(45,212,191,0.1)", color: "#2dd4bf", padding: "2px 6px", borderRadius: "4px" }}>📚 Notes Attached</span>}
+                                  </div>
                                 </div>
                               ))
                             ) : (
@@ -853,18 +877,23 @@ const router = useRouter();
                       </h4>
                       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         {lectures.filter(l => !l.course_title || !courses.some(c => c.title === l.course_title)).map(l => (
-                          <div key={l.id} style={{ backgroundColor: "rgba(17,24,39,0.4)", padding: "12px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div>
-                              <h5 style={{ margin: 0, fontSize: "13px", color: "#cbd5e1" }}>{l.name}</h5>
-                              <span style={{ fontSize: "11px", color: "#94a3b8" }}>Module: {l.module_name || "General"}</span>
+                          <div key={l.id} style={{ backgroundColor: "rgba(17,24,39,0.4)", padding: "12px", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div>
+                                <h5 style={{ margin: 0, fontSize: "13px", color: "#cbd5e1" }}>{l.name}</h5>
+                                <span style={{ fontSize: "11px", color: "#94a3b8" }}>Module: {l.module_name || "General"}</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteVideo(l.id)}
+                                style={{ padding: "6px", backgroundColor: "rgba(239,68,68,0.1)", color: "#f87171", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteVideo(l.id)}
-                              style={{ padding: "6px", backgroundColor: "rgba(239,68,68,0.1)", color: "#f87171", border: "none", borderRadius: "4px", cursor: "pointer" }}
-                            >
-                              <Trash2 size={13} />
-                            </button>
+                            {l.description && (
+                              <p style={{ margin: 0, fontSize: "11px", color: "#64748b" }}>{l.description}</p>
+                            )}
                           </div>
                         ))}
                       </div>
