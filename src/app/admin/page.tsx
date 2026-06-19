@@ -5,7 +5,8 @@ import { supabase } from "@/src/lib/supabase";
 import {
   Loader2, Trash2, Video, Layers, Home, Users, Settings, Archive, Mail, GraduationCap, Search, X, ExternalLink
 } from "lucide-react";
-
+import { useRouter } from "next/navigation"; // 👈 Agar Next.js App Router (app folder) hai
+// ya phir
 interface Profile {
   id: string;
   full_name: string;
@@ -52,8 +53,8 @@ export const dynamic = "force-dynamic";
 
 export default function AdminControlCenter() {
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-
+  // const [actionLoading, setActionLoading] = useState(false);
+const router = useRouter();
   // Core Live Data Pipelines
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -91,9 +92,27 @@ export default function AdminControlCenter() {
     notes_url: ""
   });
 
-  const [manualStudent, setManualStudent] = useState({ id: "", name: "", email: "", education: "Intermediate", course_slug: "" });
-  const [adminSettings, setAdminSettings] = useState({ currentPassword: "", newPassword: "" });
+  // ✨ Manual Student state (isay aise hi rehne dein agar yeh pehle se use ho raha hai)
+  const [manualStudent, setManualStudent] = useState({
+    id: "",
+    name: "",
+    email: "",
+    education: "Intermediate",
+    course_slug: ""
+  });
 
+  // ⚙️ Final Admin Settings State (Yahan currentPassword, newPassword aur newEmail teenon lazmi hain)
+  const [adminSettings, setAdminSettings] = useState({
+    currentPassword: "",
+    newPassword: "",
+    newEmail: "" // 👈 Yeh lazmi add karna tha change email function ke liye
+  });
+
+  // 👥 New Invitation Email State (Naye admin ko invite bhejane ke liye)
+  const [inviteEmail, setInviteEmail] = useState("");
+
+  // ⏳ Loading State (Dono forms ke status aur nodes track karne ke liye)
+  const [actionLoading, setActionLoading] = useState(false);
   // 🔄 Fetch Live Data Directly From Supabase Database
   const fetchAdminData = async () => {
     setLoading(true);
@@ -447,31 +466,76 @@ export default function AdminControlCenter() {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#1E2939", color: "#f8fafc", display: "grid", gridTemplateColumns: "260px 1fr", fontFamily: "system-ui, sans-serif" }}>
 
-      {/* 🧭 WP-STYLE PRESET SIDEBAR */}
-      <aside style={{ backgroundColor: "#111827", padding: "24px 16px", display: "flex", flexDirection: "column", gap: "24px", borderRight: "1px solid rgba(255,255,255,0.02)" }}>
-        <div style={{ padding: "0 8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <GraduationCap className="text-emerald-400" size={22} />
-            <h2 style={{ fontSize: "18px", fontWeight: "900", color: "#fff", margin: 0 }}>HRD LMS PORTAL</h2>
-          </div>
-          <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700" }}>Admin Desk Suite v5.0</span>
-        </div>
+    {/* 🧭 WP-STYLE PRESET SIDEBAR */}
+<aside style={{ backgroundColor: "#111827", padding: "24px 16px", display: "flex", flexDirection: "column", gap: "20px", borderRight: "1px solid rgba(255,255,255,0.02)", minHeight: "100vh", width: "260px", boxSizing: "border-box" }}>
+  
+  {/* Logo Section */}
+  <div style={{ padding: "0 8px", marginBottom: "8px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <GraduationCap className="text-emerald-400" size={22} />
+      <h2 style={{ fontSize: "18px", fontWeight: "900", color: "#fff", margin: 0 }}>HRD LMS PORTAL</h2>
+    </div>
+    <span style={{ fontSize: "11px", color: "#64748b", fontWeight: "700" }}>Admin Desk Suite v5.0</span>
+  </div>
 
-        <nav style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
-          {sidebarButton("dashboard", "Dashboard", <Home size={16} />)}
-          {sidebarButton("leads", "Website Leads", <Mail size={16} />)}
-          {sidebarButton("courses", "Courses", <Layers size={16} />)}
-          {sidebarButton("videos", "Videos", <Video size={16} />)}
-          {sidebarButton("students", "Manage Students", <Users size={16} />)}
-          {sidebarButton("settings", "Settings", <Settings size={16} />)}
-          {sidebarButton("bin", "Bin", <Archive size={16} />)}
-        </nav>
+  {/* Navigation Menus (Removed flex: 1 to stop push down) */}
+  <nav style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+    {sidebarButton("dashboard", "Dashboard", <Home size={16} />)}
+    {sidebarButton("leads", "Website Leads", <Mail size={16} />)}
+    {sidebarButton("courses", "Courses", <Layers size={16} />)}
+    {sidebarButton("videos", "Videos", <Video size={16} />)}
+    {sidebarButton("students", "Manage Students", <Users size={16} />)}
+    {sidebarButton("settings", "Settings", <Settings size={16} />)}
+    {sidebarButton("bin", "Bin", <Archive size={16} />)}
+  </nav>
 
-        <div style={{ backgroundColor: "rgba(255,255,255,0.02)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
-          <span style={{ display: "block", fontSize: "11px", color: "#64748b" }}>Active Session</span>
-          <span style={{ display: "block", fontSize: "13px", fontWeight: "bold", color: "#10b981", marginTop: "2px" }}>Sir Abdul Basit</span>
-        </div>
-      </aside>
+  {/* ✨ PREMIUM DESIGNED LOG OUT BUTTON (Brought Upwards) */}
+  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "16px", marginTop: "12px" }}>
+    <button
+      onClick={async () => {
+        const confirmLogout = window.confirm("Kya aap waqai log out karna chahte hain?");
+        if (!confirmLogout) return;
+        
+        try {
+          const { error } = await supabase.auth.signOut();
+          if (error) throw error;
+          router.push("/login"); 
+        } catch (err: any) {
+          alert("Logout Error: " + err.message);
+        }
+      }}
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        padding: "12px 14px",
+        backgroundColor: "rgba(244, 63, 94, 0.03)",
+        border: "1px solid rgba(244, 63, 94, 0.1)",
+        borderRadius: "12px",
+        color: "#f43f5e",
+        fontSize: "13px",
+        fontWeight: "700",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        boxSizing: "border-box"
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "rgba(244, 63, 94, 0.1)";
+        e.currentTarget.style.borderColor = "rgba(244, 63, 94, 0.2)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "rgba(244, 63, 94, 0.03)";
+        e.currentTarget.style.borderColor = "rgba(244, 63, 94, 0.1)";
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "center", transform: "rotate(180deg)" }}>
+        ⚡
+      </span>
+      Exit Admin Session
+    </button>
+  </div>
+</aside>
 
       {/* 🖥️ MAIN ACTIVE HUB SUITE */}
       <div style={{ padding: "40px", boxSizing: "border-box", overflowY: "auto", maxHeight: "100vh" }}>
@@ -1030,52 +1094,162 @@ export default function AdminControlCenter() {
           )}
         </>
         {/* ================= SECTION 6: SETTINGS PORTAL (CREDENTIALS CONFIGURATION) ================= */}
+        {/* ================= SECTION 6: SETTINGS PORTAL (FINAL PRODUCTION CODE) ================= */}
         {activeSidebar === "settings" && (
-          <div style={{ backgroundColor: "#111827", padding: "24px", borderRadius: "16px" }}>
-            <h3 style={{ margin: "0 0 4px 0", fontSize: "15px", color: "#10b981", fontWeight: "800" }}>⚙️ Core Server Control & Settings</h3>
-            <p style={{ color: "#94a3b8", fontSize: "12px", margin: "0 0 24px 0" }}>Yahan se aap admin account ke security credentials (Email aur Password) live cloud par update kar sakte hain.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "28px", width: "100%" }}>
 
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setActionLoading(true);
-                try {
-                  // Password update logic if typed
-                  if (adminSettings.newPassword.trim()) {
-                    const { error } = await supabase.auth.updateUser({ password: adminSettings.newPassword });
-                    if (error) throw error;
-                    alert("Admin Password successfully sync on live auth server!");
-                  } else {
-                    alert("Please enter a valid new password.");
+            {/* 🔐 PART 1: CORE ADMIN SECURITY CONTROL (PASSWORD & EMAIL UPDATE) */}
+            <div style={{ backgroundColor: "#111827", padding: "28px", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.05)", boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
+              <h3 style={{ margin: "0 0 4px 0", fontSize: "16px", color: "#10b981", fontWeight: "800" }}>⚙️ Core Server Control & Settings</h3>
+              <p style={{ color: "#94a3b8", fontSize: "12px", margin: "0 0 24px 0" }}>
+                Yahan se aap admin account ke security credentials (Email aur Password) live cloud par update kar sakte hain.
+              </p>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setActionLoading(true);
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user || !user.email) throw new Error("No active admin session found.");
+
+                    if (!adminSettings.currentPassword) {
+                      throw new Error("Identity verification ke liye purana password enter karna lazmi hai.");
+                    }
+
+                    // Step A: Verification using current credentials
+                    const { error: signInError } = await supabase.auth.signInWithPassword({
+                      email: user.email,
+                      password: adminSettings.currentPassword,
+                    });
+                    if (signInError) throw new Error("Purana password ghalat hai. Data access denied.");
+
+                    // Step B: Update Password if modified
+                    if (adminSettings.newPassword && adminSettings.newPassword.trim()) {
+                      const { error: passError } = await supabase.auth.updateUser({ password: adminSettings.newPassword });
+                      if (passError) throw passError;
+                      alert("🚀 Admin Password successfully updated on cloud node!");
+                    }
+
+                    // Step C: Update Email if modified
+                    if (adminSettings.newEmail && adminSettings.newEmail.trim() !== user.email) {
+                      const { error: emailError } = await supabase.auth.updateUser({ email: adminSettings.newEmail });
+                      if (emailError) throw emailError;
+                      alert("✉️ Email change sync initiated! Purani aur nayi dono mail inbox par link bheja gaya hai verification ke liye.");
+                    }
+
+                    setAdminSettings({ currentPassword: "", newPassword: "", newEmail: "" });
+                  } catch (err: any) {
+                    alert("Security Sync Error: " + err.message);
+                  } finally {
+                    setActionLoading(false);
                   }
-                  setAdminSettings({ currentPassword: "", newPassword: "" });
-                } catch (err: any) {
-                  alert("Settings Sync Error: " + err.message);
-                } finally {
-                  setActionLoading(false);
-                }
-              }}
-              style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "500px" }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600" }}>New Admin Secure Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter ultra-secure new password..."
-                  value={adminSettings.newPassword}
-                  onChange={e => setAdminSettings({ ...adminSettings, newPassword: e.target.value })}
-                  style={{ padding: "10px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "6px", color: "white", fontSize: "12px" }}
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={actionLoading}
-                style={{ padding: "10px 14px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "6px", fontWeight: "bold", fontSize: "12px", cursor: "pointer", width: "fit-content", display: "flex", alignItems: "center", gap: "8px" }}
+                }}
+                style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "500px" }}
               >
-                {actionLoading ? "Updating Nodes..." : "Save Settings & Lock"}
-              </button>
-            </form>
+                {/* Current Password Field */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", color: "#f43f5e", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>Current Admin Password *</label>
+                  <input
+                    type="password"
+                    placeholder="Confirm current active password..."
+                    value={adminSettings.currentPassword || ""}
+                    onChange={e => setAdminSettings({ ...adminSettings, currentPassword: e.target.value })}
+                    required
+                    style={{ padding: "12px", backgroundColor: "#070707", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: "white", fontSize: "13px", outline: "none" }}
+                  />
+                </div>
+
+                <div style={{ height: "1px", backgroundColor: "rgba(255,255,255,0.05)", margin: "8px 0" }}></div>
+
+                {/* Change Email Field */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600" }}>New Admin Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="Enter new admin target email..."
+                    value={adminSettings.newEmail || ""}
+                    onChange={e => setAdminSettings({ ...adminSettings, newEmail: e.target.value })}
+                    style={{ padding: "12px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", color: "white", fontSize: "13px", outline: "none" }}
+                  />
+                </div>
+
+                {/* Change Password Field */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600" }}>New Admin Secure Password</label>
+                  <input
+                    type="password"
+                    placeholder="Enter ultra-secure new password..."
+                    value={adminSettings.newPassword || ""}
+                    onChange={e => setAdminSettings({ ...adminSettings, newPassword: e.target.value })}
+                    style={{ padding: "12px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", color: "white", fontSize: "13px", outline: "none" }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  style={{ padding: "12px 18px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "13px", cursor: "pointer", width: "fit-content", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 12px rgba(16,185,129,0.15)" }}
+                >
+                  {actionLoading ? "Processing Nodes..." : "Save Settings & Lock Core"}
+                </button>
+              </form>
+            </div>
+
+            {/* 👥 PART 2: DIRECT ADMIN ROLE DELEGATION (KISI AUR KO ADMIN BANANA) */}
+            <div style={{ backgroundColor: "#111827", padding: "28px", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.05)", boxShadow: "0 10px 30px rgba(0,0,0,0.3)" }}>
+              <h3 style={{ margin: "0 0 4px 0", fontSize: "16px", color: "#3b82f6", fontWeight: "800" }}>👥 Direct Admin Role Delegation</h3>
+              <p style={{ color: "#94a3b8", fontSize: "12px", margin: "0 0 24px 0" }}>
+                Kisi registered user ya instructor ka email yahan enter kar ke unhein direct Admin privileges assign karein.
+              </p>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!inviteEmail) return;
+                  setActionLoading(true);
+
+                  try {
+                    // Direct database update matrix
+                    const { data, error } = await supabase
+                      .from('profiles') // Aapke database ka profiles/users table jahan rules save hain
+                      .update({ role: 'admin' })
+                      .eq('email', inviteEmail.trim());
+
+                    if (error) throw error;
+
+                    alert(`🚀 Success! ${inviteEmail} ko direct Admin role assign kar diya gaya hai. Ab unka password wahi chalega jo unhone register karte waqt rakha tha.`);
+                    setInviteEmail("");
+                  } catch (err: any) {
+                    alert("Delegation Error: " + err.message);
+                  } finally {
+                    setActionLoading(false);
+                  }
+                }}
+                style={{ display: "flex", flexDirection: "column", gap: "16px", maxWidth: "500px" }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "600" }}>Target User Email</label>
+                  <input
+                    type="email"
+                    placeholder="e.g., partner@domain.com"
+                    value={inviteEmail || ""}
+                    onChange={e => setInviteEmail(e.target.value)}
+                    required
+                    style={{ padding: "12px", backgroundColor: "#1E2939", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "10px", color: "white", fontSize: "13px", outline: "none" }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  style={{ padding: "12px 18px", backgroundColor: "#3b82f6", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "13px", cursor: "pointer", width: "fit-content", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 12px rgba(59,130,246,0.15)" }}
+                >
+                  {actionLoading ? "Delegating Privileges..." : "Authorize New Admin"}
+                </button>
+              </form>
+            </div>
+
           </div>
         )}
 
