@@ -1,52 +1,34 @@
-// 'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // ✨ Fixed Path Import Alias
-// import { supabase } from '@/src/lib/supabase'; // ✨ Correct Separate Line Definition
-import { supabase } from '../../lib/supabase';
-import {
-  LogOut, Loader2, Shield, Users, Building2,
-  DollarSign, LayoutDashboard, Key, Menu, X
+import { useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabase'; // 👈 Relative path mapping taake URL undefined na ho
+import { 
+  LogOut, Loader2, Shield, Users, Building2, 
+  DollarSign, LayoutDashboard, Key, Menu, X 
 } from 'lucide-react';
 
 import LeadsPipeline from './components/LeadsPipeline';
 import InventoryManager from './components/InventoryManager';
 import FinancialMatrix from './components/FinancialMatrix';
 
-interface Lead { 
-  id: string; 
-  name: string; 
-  email: string; 
-  phone: string; 
-  property_interest: string; 
-  status: string; 
-}
+interface Lead { id: string; name: string; email: string; phone: string; property_interest: string; status: string; }
+interface Property { id: string; title: string; price: number; location: string; beds_baths: string; commission_fee: number; purpose?: string; rent_status?: string; }
 
-interface Property { 
-  id: string; 
-  title: string; 
-  price: number; 
-  location: string; 
-  beds_baths: string; 
-  commission_fee: number; 
-  purpose?: string; 
-  rent_status?: string; 
-}
-
-export default function AdminDashboardClient() {
+export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
 
-  // WP Style Tab Routing State Node
+  // WP Style Tab Controller
   const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'inventory' | 'rentals' | 'finance'>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [windowWidth, setWindowWidth] = useState(1200);
 
   // Synchronize Central Database Nodes
   const fetchSystemData = async () => {
-    // 🛡️ Build Server Pipeline Guard Check
+    // 🛡️ Build Server Pipeline Guard Check (Netlify optimization)
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
       console.log("Build environment dynamic lock active: Skipping database hit.");
       return;
@@ -151,7 +133,7 @@ export default function AdminDashboardClient() {
         </button>
       )}
 
-      {/* 🏛️ EXECUTIVE WORDPRESS-STYLE NAVIGATION SIDEBAR */}
+      {/* 🏛️ EXECUTIVE WORDPRESS-STYLE SIDEBAR */}
       <aside style={{ width: '280px', backgroundColor: '#0a0a0a', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', position: isMobile ? 'fixed' : 'sticky', top: 0, height: '100vh', zIndex: 999, transition: 'transform 0.3s ease', transform: sidebarOpen ? 'translateX(0)' : 'translateX(-280px)', marginLeft: isMobile ? 0 : (sidebarOpen ? 0 : '-280px') }}>
         <div style={{ padding: '32px 24px', borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', gap: '12px' }}><Shield size={20} className="text-[#d4af37]" /><h2 style={{ margin: 0, color: '#fff', fontSize: '18px', fontWeight: 900, letterSpacing: '1px' }}>LUXE<span style={{ color: '#d4af37', fontWeight: 300 }}>ADMIN</span></h2></div>
         <nav style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
@@ -183,7 +165,7 @@ export default function AdminDashboardClient() {
         {activeTab === 'leads' && (<div><LeadsPipeline leads={leads} onStatusUpdate={handleUpdateLeadStatus} onDeleteLead={handleDeleteLeadNode} /></div>)}
         {activeTab === 'inventory' && (<div><InventoryManager properties={properties} onAddProperty={handleAddPropertyBridge} onDeleteProperty={handleDeletePropertyNode} /></div>)}
 
-        {/* Active Rental Cashflow Manager Grid */}
+        {/* Active Rental Cashflow Hub */}
         {activeTab === 'rentals' && (
           <div style={{ backgroundColor: '#0d0d0d', border: '1px solid rgba(255,255,255,0.05)', padding: '32px', borderRadius: '24px' }}>
             <div style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '16px', marginBottom: '24px' }}>
