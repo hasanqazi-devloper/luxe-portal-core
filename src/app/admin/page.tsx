@@ -1,8 +1,9 @@
-'use client';
+// 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // ✨ Fixed Path Import Alias
-import { supabase } from '@/src/lib/supabase'; // ✨ Correct Separate Line Definition
+// import { supabase } from '@/src/lib/supabase'; // ✨ Correct Separate Line Definition
+import { supabase } from '../../lib/supabase';
 import {
   LogOut, Loader2, Shield, Users, Building2,
   DollarSign, LayoutDashboard, Key, Menu, X
