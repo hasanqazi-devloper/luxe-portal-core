@@ -7,8 +7,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  output: 'export',      // ⚡ Static HTML export mode active
-  trailingSlash: true,   // 🚀 Trailing slash logic trigger taake Netlify paths break na karein!
+  output: 'export', // ⚡ Keep it export mode!
 };
 
 export default nextConfig;
