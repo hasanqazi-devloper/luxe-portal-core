@@ -24,7 +24,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Minimal Custom Scrollbar */
+/* Minimal Custom Scrollbar for Luxury Theme */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -32,9 +32,9 @@ html {
   background: #070707;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
+  background: #222222; /* Sleek dark gray default */
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
+  background: #d4af37; /* Fixed: Changes blue hover to signature Premium Gold */
 }
