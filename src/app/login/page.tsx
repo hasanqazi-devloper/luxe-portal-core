@@ -1,5 +1,8 @@
 'use client';
+// ⚡ Strict Next.js Deployment Override Node
+export const dynamic = 'force-dynamic';
 
+// ... (Aapka baqi login page ka jitna bhi code hai, use bilkul mat chhero, baqi sab same rahega)
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/src/lib/supabase';
