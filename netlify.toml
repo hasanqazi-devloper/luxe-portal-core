@@ -1,3 +1,9 @@
 [build]
   command = "npm run build"
   publish = "out"
+
+[build.processing]
+  skip_processing = true
+
+# This explicitly tells Netlify NOT to run Next.js serverless runtime middleware
+[plugins]
