@@ -1,39 +1,52 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/src/lib/supabase';
-import {
-  LogOut, Loader2, Shield, Users, Building2,
-  DollarSign, LayoutDashboard, Key, Menu, X
+import { useRouter } from 'next/navigation'; // ✨ Fixed path aliasimport { supabase } from '@/src/lib/supabase';
+import { 
+  LogOut, Loader2, Shield, Users, Building2, 
+  DollarSign, LayoutDashboard, Key, Menu, X 
 } from 'lucide-react';
-// ⚡ Next.js Build-Time Prerendering Override Nodes
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-export const revalidate = 0;
-// export const dynamic = 'force-dynamic';
+
 import LeadsPipeline from './components/LeadsPipeline';
 import InventoryManager from './components/InventoryManager';
 import FinancialMatrix from './components/FinancialMatrix';
 
-interface Lead { id: string; name: string; email: string; phone: string; property_interest: string; status: string; }
-interface Property { id: string; title: string; price: number; location: string; beds_baths: string; commission_fee: number; purpose?: string; rent_status?: string; }
+interface Lead { 
+  id: string; 
+  name: string; 
+  email: string; 
+  phone: string; 
+  property_interest: string; 
+  status: string; 
+}
 
-export default function AdminDashboard() {
+interface Property { 
+  id: string; 
+  title: string; 
+  price: number; 
+  location: string; 
+  beds_baths: string; 
+  commission_fee: number; 
+  purpose?: string; 
+  rent_status?: string; 
+}
+
+export default function AdminDashboardClient() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
 
-  // ⚡ WP Tab Controller with 'rentals' node added
+  // WP Style Tab Routing State Node
   const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'inventory' | 'rentals' | 'finance'>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [windowWidth, setWindowWidth] = useState(1200);
 
-const fetchSystemData = async () => {
-    // 🛡️ Build Server Crash Guard Node
+  // Synchronize Central Database Nodes
+  const fetchSystemData = async () => {
+    // 🛡️ Build Server Pipeline Guard Check
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
-      console.log("Build optimization active: Skipping database node matching.");
+      console.log("Build environment dynamic lock active: Skipping database hit.");
       return;
     }
 
@@ -45,7 +58,7 @@ const fetchSystemData = async () => {
       if (leadsRes.data) setLeads(leadsRes.data);
       if (propsRes.data) setProperties(propsRes.data);
     } catch (err) {
-      console.error("System Sync Error:", err);
+      console.error("System Matrix Sync Error:", err);
     } finally {
       setLoading(false);
     }
@@ -55,6 +68,7 @@ const fetchSystemData = async () => {
     if (typeof window !== 'undefined') {
       setWindowWidth(window.innerWidth);
       if (window.innerWidth < 992) setSidebarOpen(false);
+      
       const handleResize = () => {
         setWindowWidth(window.innerWidth);
         if (window.innerWidth < 992) setSidebarOpen(false);
@@ -68,8 +82,11 @@ const fetchSystemData = async () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) router.push('/login');
-      else fetchSystemData();
+      if (!session) {
+        router.push('/login');
+      } else {
+        fetchSystemData();
+      }
     };
     checkSession();
   }, [router]);
@@ -81,7 +98,10 @@ const fetchSystemData = async () => {
 
   const handleAddPropertyBridge = async (propertyData: any) => {
     const { error } = await supabase.from('properties').insert([propertyData]);
-    if (!error) { fetchSystemData(); return true; }
+    if (!error) { 
+      fetchSystemData(); 
+      return true; 
+    }
     return false;
   };
 
@@ -95,11 +115,10 @@ const fetchSystemData = async () => {
     if (!error) fetchSystemData();
   };
 
-  // 🔄 NEW MUTATION: Toggle Rent Status (Paid / Pending) directly inside Supabase
   const handleToggleRentStatus = async (id: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'Paid' ? 'Pending' : 'Paid';
     const { error } = await supabase.from('properties').update({ rent_status: nextStatus }).eq('id', id);
-    if (!error) fetchSystemData(); // Live reload matching components
+    if (!error) fetchSystemData();
   };
 
   const handleLogout = async () => {
@@ -123,30 +142,27 @@ const fetchSystemData = async () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#050505', display: 'flex', position: 'relative' }}>
 
-      {/* Mobile Toggle Floater */}
+      {/* Mobile Sidebar Trigger Floater */}
       {isMobile && (
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ position: 'fixed', bottom: '24px', right: '24px', width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#d4af37', border: 'none', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, boxShadow: '0 10px 30px rgba(212,175,55,0.3)', cursor: 'pointer' }}>
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       )}
 
-      {/* 🏛️ EXECUTIVE WP-STYLE SIDEBAR */}
+      {/* 🏛️ EXECUTIVE WORDPRESS-STYLE NAVIGATION SIDEBAR */}
       <aside style={{ width: '280px', backgroundColor: '#0a0a0a', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', position: isMobile ? 'fixed' : 'sticky', top: 0, height: '100vh', zIndex: 999, transition: 'transform 0.3s ease', transform: sidebarOpen ? 'translateX(0)' : 'translateX(-280px)', marginLeft: isMobile ? 0 : (sidebarOpen ? 0 : '-280px') }}>
         <div style={{ padding: '32px 24px', borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', gap: '12px' }}><Shield size={20} className="text-[#d4af37]" /><h2 style={{ margin: 0, color: '#fff', fontSize: '18px', fontWeight: 900, letterSpacing: '1px' }}>LUXE<span style={{ color: '#d4af37', fontWeight: 300 }}>ADMIN</span></h2></div>
         <nav style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
           <button onClick={() => { setActiveTab('overview'); if (isMobile) setSidebarOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '14px 16px', borderRadius: '12px', border: 'none', backgroundColor: activeTab === 'overview' ? 'rgba(212,175,55,0.08)' : 'transparent', color: activeTab === 'overview' ? '#d4af37' : '#888', textAlign: 'left', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}><LayoutDashboard size={16} /> Overview Console</button>
           <button onClick={() => { setActiveTab('leads'); if (isMobile) setSidebarOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '14px 16px', borderRadius: '12px', border: 'none', backgroundColor: activeTab === 'leads' ? 'rgba(212,175,55,0.08)' : 'transparent', color: activeTab === 'leads' ? '#d4af37' : '#888', textAlign: 'left', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}><Users size={16} /> Lead Interceptor<span style={{ marginLeft: 'auto', fontSize: '10px', background: activeTab === 'leads' ? '#d4af37' : '#222', color: activeTab === 'leads' ? '#000' : '#aaa', padding: '2px 8px', borderRadius: '10px' }}>{leads.length}</span></button>
           <button onClick={() => { setActiveTab('inventory'); if (isMobile) setSidebarOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '14px 16px', borderRadius: '12px', border: 'none', backgroundColor: activeTab === 'inventory' ? 'rgba(212,175,55,0.08)' : 'transparent', color: activeTab === 'inventory' ? '#d4af37' : '#888', textAlign: 'left', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}><Building2 size={16} /> Portfolio Vault</button>
-
-          {/* 🔑 BRAND NEW: THE RENTAL HUB SIDEBAR ACCELERATOR BUTTON */}
           <button onClick={() => { setActiveTab('rentals'); if (isMobile) setSidebarOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '14px 16px', borderRadius: '12px', border: 'none', backgroundColor: activeTab === 'rentals' ? 'rgba(59,130,246,0.08)' : 'transparent', color: activeTab === 'rentals' ? '#3b82f6' : '#888', textAlign: 'left', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}><Key size={16} /> Rental Tracker Hub <span style={{ marginLeft: 'auto', fontSize: '10px', background: activeTab === 'rentals' ? '#3b82f6' : '#222', color: activeTab === 'rentals' ? '#000' : '#aaa', padding: '2px 8px', borderRadius: '10px' }}>{rentalProperties.length}</span></button>
-
           <button onClick={() => { setActiveTab('finance'); if (isMobile) setSidebarOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '14px 16px', borderRadius: '12px', border: 'none', backgroundColor: activeTab === 'finance' ? 'rgba(212,175,55,0.08)' : 'transparent', color: activeTab === 'finance' ? '#d4af37' : '#888', textAlign: 'left', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}><DollarSign size={16} /> Revenue Engine</button>
         </nav>
         <div style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.03)' }}><button onClick={handleLogout} style={{ width: '100%', backgroundColor: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.1)', color: '#ef4444', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><LogOut size={14} /> Disconnect</button></div>
       </aside>
 
-      {/* Main Content Render Window */}
+      {/* Main Content Workspace */}
       <main style={{ flex: 1, padding: isMobile ? '24px 16px' : '40px', boxSizing: 'border-box', overflowX: 'hidden' }}>
         {activeTab === 'overview' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -165,7 +181,7 @@ const fetchSystemData = async () => {
         {activeTab === 'leads' && (<div><LeadsPipeline leads={leads} onStatusUpdate={handleUpdateLeadStatus} onDeleteLead={handleDeleteLeadNode} /></div>)}
         {activeTab === 'inventory' && (<div><InventoryManager properties={properties} onAddProperty={handleAddPropertyBridge} onDeleteProperty={handleDeletePropertyNode} /></div>)}
 
-        {/* 🔑 BRAND NEW: CONNECTOR FOR RENTAL MANAGER INTERFACE */}
+        {/* Active Rental Cashflow Manager Grid */}
         {activeTab === 'rentals' && (
           <div style={{ backgroundColor: '#0d0d0d', border: '1px solid rgba(255,255,255,0.05)', padding: '32px', borderRadius: '24px' }}>
             <div style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '16px', marginBottom: '24px' }}>
@@ -190,7 +206,6 @@ const fetchSystemData = async () => {
                         <strong style={{ color: '#fff', fontSize: '16px' }}>${prop.price.toLocaleString()}/mo</strong>
                       </div>
 
-                      {/* 🔄 Dynamic Rent Status Button Nishan */}
                       <button
                         onClick={() => handleToggleRentStatus(prop.id, prop.rent_status || 'Pending')}
                         style={{
