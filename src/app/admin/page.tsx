@@ -1,5 +1,9 @@
 'use client';
 
+// ⚡ Next.js Dynamic Run Engine Configuration Locks
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../lib/supabase'; // 👈 Relative path mapping taake URL undefined na ho
