@@ -1,13 +1,14 @@
-// ⚡ Strict Static Compilation Bypass Nodes
+'use client'; // 👈 ✨ Next.js 16 validation layer unlock trigger!
+
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 import dynamicImport from 'next/dynamic';
 
-// Next.js ko bolo is dashboard layout ko build server par chhere hi na, sirf direct browser par load kare!
+// Ab compiler ise perfectly client-side runtime dynamic shell banayega
 const AdminDashboardClient = dynamicImport(
   () => import('./AdminDashboardClient'),
-  { ssr: false } // 🛡️ Completely bypasses build engine prerender check!
+  { ssr: false } 
 );
 
 export default function AdminPage() {
