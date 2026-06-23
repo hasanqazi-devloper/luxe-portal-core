@@ -1,6 +1,6 @@
 [[redirects]]
   from = "/*"
-  to = "/.next/server/pages/*"
+  to = "/index.html"
   status = 200
 
 [build]
