@@ -2,6 +2,9 @@
   command = "npm run build"
   publish = "out"
 
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true" # 🚀 ✨ Netlify runtime plugin auto-kill switch!
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
