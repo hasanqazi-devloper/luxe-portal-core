@@ -5,9 +5,10 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true, // Static export ke liye lazmi hai
+    unoptimized: true,
   },
-  output: 'export', // ⚡ Standard Static HTML Export Engine Lock!
+  output: 'export',      // ⚡ Static HTML export mode active
+  trailingSlash: true,   // 🚀 Trailing slash logic trigger taake Netlify paths break na karein!
 };
 
 export default nextConfig;
