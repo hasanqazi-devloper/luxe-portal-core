@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation'; // ✨ Fixed path aliasimport { supabase } from '@/src/lib/supabase';
-import { 
-  LogOut, Loader2, Shield, Users, Building2, 
-  DollarSign, LayoutDashboard, Key, Menu, X 
+import { useRouter } from 'next/navigation'; // ✨ Fixed Path Import Alias
+import { supabase } from '@/src/lib/supabase'; // ✨ Correct Separate Line Definition
+import {
+  LogOut, Loader2, Shield, Users, Building2,
+  DollarSign, LayoutDashboard, Key, Menu, X
 } from 'lucide-react';
 
 import LeadsPipeline from './components/LeadsPipeline';
