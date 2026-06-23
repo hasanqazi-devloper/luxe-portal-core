@@ -30,7 +30,13 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [windowWidth, setWindowWidth] = useState(1200);
 
-  const fetchSystemData = async () => {
+const fetchSystemData = async () => {
+    // 🛡️ Build Server Crash Guard Node
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+      console.log("Build optimization active: Skipping database node matching.");
+      return;
+    }
+
     try {
       const [leadsRes, propsRes] = await Promise.all([
         supabase.from('leads').select('*').order('created_at', { ascending: false }),
