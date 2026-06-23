@@ -7,8 +7,11 @@ import {
   LogOut, Loader2, Shield, Users, Building2,
   DollarSign, LayoutDashboard, Key, Menu, X
 } from 'lucide-react';
-
+// ⚡ Next.js Build-Time Prerendering Override Nodes
 export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+// export const dynamic = 'force-dynamic';
 import LeadsPipeline from './components/LeadsPipeline';
 import InventoryManager from './components/InventoryManager';
 import FinancialMatrix from './components/FinancialMatrix';
