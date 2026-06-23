@@ -8,6 +8,7 @@ import {
   DollarSign, LayoutDashboard, Key, Menu, X
 } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
 import LeadsPipeline from './components/LeadsPipeline';
 import InventoryManager from './components/InventoryManager';
 import FinancialMatrix from './components/FinancialMatrix';
