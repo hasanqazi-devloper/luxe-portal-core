@@ -5,8 +5,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true, // ⚡ Asset path load crash bypass trigger
-  }
+    unoptimized: true, // Static export ke liye lazmi hai
+  },
+  output: 'export', // ⚡ Standard Static HTML Export Engine Lock!
 };
 
 export default nextConfig;
