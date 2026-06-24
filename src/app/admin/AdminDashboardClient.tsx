@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../lib/supabase'; // 👈 Safe relative link structure
+import { supabase } from '../../lib/supabase'; 
 import { 
   LogOut, Loader2, Shield, Users, Building2, 
   DollarSign, LayoutDashboard, Key, Menu, X 
@@ -12,8 +12,8 @@ import LeadsPipeline from './components/LeadsPipeline';
 import InventoryManager from './components/InventoryManager';
 import FinancialMatrix from './components/FinancialMatrix';
 
-interface Lead { id: string; name: string; email: string; phone: string; property_interest: string; status: string; }
-interface Property { id: string; title: string; price: number; location: string; beds_baths: string; commission_fee: number; purpose?: string; rent_status?: string; }
+interface Lead { id: string; name: string; email: string; phone: string; property_interest: string; status: string; created_at?: string; }
+interface Property { id: string; title: string; price: number; location: string; beds_baths: string; commission_fee: number; purpose?: string; rent_status?: string; created_at?: string; }
 
 export default function AdminDashboardClient() {
   const router = useRouter();
@@ -21,7 +21,6 @@ export default function AdminDashboardClient() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
 
-  // WP Style Tab Controller State Management
   const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'inventory' | 'rentals' | 'finance'>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [windowWidth, setWindowWidth] = useState(1200);
@@ -32,7 +31,7 @@ export default function AdminDashboardClient() {
         supabase.from('leads').select('*').order('created_at', { ascending: false }),
         supabase.from('properties').select('*').order('created_at', { ascending: false })
       ]);
-      if (leadsRes.data) setLeads(leadsRes.data);
+      if (leadsRes.data) setLeads(leadsRes.data as any);
       if (propsRes.data) setProperties(propsRes.data);
     } catch (err) {
       console.error("System Matrix Sync Error:", err);
@@ -68,9 +67,12 @@ export default function AdminDashboardClient() {
     checkSession();
   }, [router]);
 
-  const handleUpdateLeadStatus = async (id: string, newStatus: string) => {
-    const { error } = await supabase.from('leads').update({ status: newStatus }).eq('id', id);
-    if (!error) fetchSystemData();
+  const handleUpdateLeadStatus = (id: string, newStatus: string) => {
+    setLeads(prev => prev.map(lead => lead.id === id ? { ...lead, status: newStatus } : lead));
+  };
+
+  const handleDeleteLeadNode = (id: string) => {
+    setLeads(prev => prev.filter(lead => lead.id !== id));
   };
 
   const handleAddPropertyBridge = async (propertyData: any) => {
@@ -80,11 +82,6 @@ export default function AdminDashboardClient() {
       return true; 
     }
     return false;
-  };
-
-  const handleDeleteLeadNode = async (id: string) => {
-    const { error } = await supabase.from('leads').delete().eq('id', id);
-    if (!error) fetchSystemData();
   };
 
   const handleDeletePropertyNode = async (id: string) => {
